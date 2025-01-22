@@ -5,6 +5,7 @@ CREATE TABLE ProjectUsers (
     Password VARCHAR2(255) NOT NULL,         -- 비밀번호
     CreatedAt DATE DEFAULT SYSDATE           -- 생성일
 );
+/
 
 CREATE TABLE ProjectTeams (
     ProjectTeamID NUMBER PRIMARY KEY,            -- 팀 ID
