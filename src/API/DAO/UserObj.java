@@ -1,14 +1,16 @@
 package API.DAO;
 
 public class UserObj {
-	private String id, name, ts;
+	private String id, name, pwd, createDate;
 	
-	public UserObj(String id, String name, String ts) {
+	public UserObj(String id, String name, String pwd, String createDate) {
 		this.id = id;
 		this.name = name;
-		this.ts = ts;
+		this.pwd = pwd;
+		this.createDate = createDate;
 	}
 	public String getId() { return this.id; }
 	public String getName() { return this.name; }
-	public String getTs() { return this.ts; }
+	public String getPWD() { return this.pwd; }
+	public String getcreateDate() { return this.createDate; }
 }
