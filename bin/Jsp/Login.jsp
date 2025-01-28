@@ -1,6 +1,6 @@
 <%@ page contentType="text/html" pageEncoding="utf-8" %>
 <%@ page import="API.DAO.UserDAO" %>
-<%r
+<%
 	request.setCharacterEncoding("utf-8");
     String uid = request.getParameter("id");
     String upass = request.getParameter("ps");

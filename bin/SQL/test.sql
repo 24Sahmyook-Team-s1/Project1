@@ -1,0 +1,258 @@
+-- 기존 객체 삭제
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE ProjectDashboards CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectDashboards: ' || SQLERRM);
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE ProjectComments CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectComments: ' || SQLERRM);
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE ProjectIssues CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectIssues: ' || SQLERRM);
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE ProjectGanttCharts CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectGanttCharts: ' || SQLERRM);
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE Projects CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping Projects: ' || SQLERRM);
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE ProjectTeams CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectTeams: ' || SQLERRM);
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE ProjectUsers CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectUsers: ' || SQLERRM);
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE TeamMembers CASCADE CONSTRAINTS';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping TeamMembers: ' || SQLERRM);
+END;
+/
+
+-- 테이블 생성
+CREATE TABLE ProjectUsers (
+    ProjectUserID VARCHAR2(50) PRIMARY KEY,
+    Email VARCHAR2(255) NOT NULL,
+    Name VARCHAR2(100) NOT NULL,
+    Password VARCHAR2(255) NOT NULL,
+    CreatedAt DATE DEFAULT SYSDATE
+); 
+
+CREATE TABLE ProjectTeams (
+    ProjectTeamID NUMBER PRIMARY KEY,
+    TeamName VARCHAR2(100) NOT NULL,
+    CreatedAt DATE DEFAULT SYSDATE
+); 
+
+CREATE TABLE TeamMembers (
+    ProjectUserID VARCHAR2(50) REFERENCES ProjectUsers(ProjectUserID),
+    ProjectTeamID NUMBER REFERENCES ProjectTeams(ProjectTeamID),
+    CreatedAt DATE DEFAULT SYSDATE,
+    PRIMARY KEY (ProjectUserID, ProjectTeamID)
+); 
+
+CREATE TABLE Projects (
+    ProjectID NUMBER PRIMARY KEY,
+    ProjectName VARCHAR2(100) NOT NULL,
+    ProjectTeamID NUMBER REFERENCES ProjectTeams(ProjectTeamID),
+    CreatedAt DATE DEFAULT SYSDATE
+); 
+
+CREATE TABLE ProjectGanttCharts (
+    ProjectChartID NUMBER PRIMARY KEY,
+    ProjectID NUMBER REFERENCES Projects(ProjectID),
+    TaskName VARCHAR2(200) NOT NULL,
+    CreatedAt DATE DEFAULT SYSDATE
+); 
+
+CREATE TABLE ProjectIssues (
+    ProjectIssueID NUMBER PRIMARY KEY,
+    ProjectUserID VARCHAR2(50) REFERENCES ProjectUsers(ProjectUserID),
+    ProjectID NUMBER REFERENCES Projects(ProjectID),
+    Title VARCHAR2(200) NOT NULL,
+    Description CLOB,
+    CreatedAt DATE DEFAULT SYSDATE
+); 
+
+CREATE TABLE ProjectComments (
+    ProjectCommentID NUMBER PRIMARY KEY,
+    ProjectUserID VARCHAR2(50) REFERENCES ProjectUsers(ProjectUserID),
+    ProjectIssueID NUMBER REFERENCES ProjectIssues(ProjectIssueID),
+    CommentText CLOB NOT NULL,
+    CreatedAt DATE DEFAULT SYSDATE
+); 
+
+CREATE TABLE ProjectDashboards (
+    ProjectDashboardID NUMBER PRIMARY KEY,
+    ProjectID NUMBER REFERENCES Projects(ProjectID),
+    Content CLOB,
+    UpdatedAt DATE DEFAULT SYSDATE
+); 
+
+-- 시퀀스 및 트리거 생성
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ProjectUser_Seq';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectUser_Seq: ' || SQLERRM);
+END;
+/
+
+CREATE SEQUENCE ProjectUser_Seq START WITH 1 INCREMENT BY 1; 
+CREATE OR REPLACE TRIGGER ProjectUser_Trigger
+BEFORE INSERT ON ProjectUsers
+FOR EACH ROW
+BEGIN
+    IF :NEW.ProjectUserID IS NULL THEN
+        SELECT ProjectUser_Seq.NEXTVAL INTO :NEW.ProjectUserID FROM DUAL;
+    END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ProjectTeam_Seq';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectTeam_Seq: ' || SQLERRM);
+END;
+/
+
+CREATE SEQUENCE ProjectTeam_Seq START WITH 1 INCREMENT BY 1; 
+CREATE OR REPLACE TRIGGER ProjectTeam_Trigger
+BEFORE INSERT ON ProjectTeams
+FOR EACH ROW
+BEGIN
+    IF :NEW.ProjectTeamID IS NULL THEN
+        SELECT ProjectTeam_Seq.NEXTVAL INTO :NEW.ProjectTeamID FROM DUAL;
+    END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE Project_Seq';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping Project_Seq: ' || SQLERRM);
+END;
+/
+
+CREATE SEQUENCE Project_Seq START WITH 1 INCREMENT BY 1; 
+CREATE OR REPLACE TRIGGER Project_Trigger
+BEFORE INSERT ON Projects
+FOR EACH ROW
+BEGIN
+    IF :NEW.ProjectID IS NULL THEN
+        SELECT Project_Seq.NEXTVAL INTO :NEW.ProjectID FROM DUAL;
+    END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ProjectChart_Seq';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectChart_Seq: ' || SQLERRM);
+END;
+/
+
+CREATE SEQUENCE ProjectChart_Seq START WITH 1 INCREMENT BY 1; 
+CREATE OR REPLACE TRIGGER ProjectChart_Trigger
+BEFORE INSERT ON ProjectGanttCharts
+FOR EACH ROW
+BEGIN
+    IF :NEW.ProjectChartID IS NULL THEN
+        SELECT ProjectChart_Seq.NEXTVAL INTO :NEW.ProjectChartID FROM DUAL;
+    END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ProjectIssue_Seq';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectIssue_Seq: ' || SQLERRM);
+END;
+/
+
+CREATE SEQUENCE ProjectIssue_Seq START WITH 1 INCREMENT BY 1; 
+CREATE OR REPLACE TRIGGER ProjectIssue_Trigger
+BEFORE INSERT ON ProjectIssues
+FOR EACH ROW
+BEGIN
+    IF :NEW.ProjectIssueID IS NULL THEN
+        SELECT ProjectIssue_Seq.NEXTVAL INTO :NEW.ProjectIssueID FROM DUAL;
+    END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ProjectComment_Seq';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectComment_Seq: ' || SQLERRM);
+END;
+/
+
+CREATE SEQUENCE ProjectComment_Seq START WITH 1 INCREMENT BY 1; 
+CREATE OR REPLACE TRIGGER ProjectComment_Trigger
+BEFORE INSERT ON ProjectComments
+FOR EACH ROW
+BEGIN
+    IF :NEW.ProjectCommentID IS NULL THEN
+        SELECT ProjectComment_Seq.NEXTVAL INTO :NEW.ProjectCommentID FROM DUAL;
+    END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ProjectDashboard_Seq';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error dropping ProjectDashboard_Seq: ' || SQLERRM);
+END;
+/
+
+CREATE SEQUENCE ProjectDashboard_Seq START WITH 1 INCREMENT BY 1; 
+CREATE OR REPLACE TRIGGER ProjectDashboard_Trigger
+BEFORE INSERT ON ProjectDashboards
+FOR EACH ROW
+BEGIN
+    IF :NEW.ProjectDashboardID IS NULL THEN
+        SELECT ProjectDashboard_Seq.NEXTVAL INTO :NEW.ProjectDashboardID FROM DUAL;
+    END IF;
+END;
+/
